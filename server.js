@@ -49,18 +49,16 @@ db.once("open", function() {
 // A GET request to scrape the echojs website
 app.get("/scrape", function(req, res) {
   // First, we grab the body of the html with request
-  request("http://www.echojs.com/", function(error, response, html) {
+  request("http://www.huffingtonpost.com/section/weird-news", function(error, response, html) {
     // Then, we load that into cheerio and save it to $ for a shorthand selector
     var $ = cheerio.load(html);
     // Now, we grab every h2 within an article tag, and do the following:
-    $("article h2").each(function(i, element) {
+  $("div.card__content").each(function(i, element) {
 
-      // Save an empty result object
-      var result = {};
+    var result = {}
 
-      // Add the text and href of every link, and save them as properties of the result object
-      result.title = $(this).children("a").text();
-      result.link = $(this).children("a").attr("href");
+    result.link = $(this).find(".bn-card-headline").attr("href");
+    result.title = $(this).find(".bn-card-headline").text();
 
       // Using our Article model, create a new entry
       // This effectively passes the result object to the entry (and the title and link)
@@ -84,10 +82,18 @@ app.get("/scrape", function(req, res) {
   res.send("Scrape Complete");
 });
 
+
+
+
 // This will get the articles we scraped from the mongoDB
 app.get("/articles", function(req, res) {
+  var params = {}
+
+  if (req.query.hasOwnProperty("saved") && req.query.saved){
+    params = {saved: true}
+  }
   // Grab every doc in the Articles array
-  Article.find({}, function(error, doc) {
+  Article.find(params, function(error, doc) {
     // Log any errors
     if (error) {
       console.log(error);
@@ -98,6 +104,15 @@ app.get("/articles", function(req, res) {
     }
   });
 });
+
+
+
+
+
+
+
+
+
 
 // Grab an article by it's ObjectId
 app.get("/articles/:id", function(req, res) {
@@ -150,7 +165,25 @@ app.post("/articles/:id", function(req, res) {
 });
 
 
+
+app.post("/articles/save/:id", function(req, res) {
+  console.log(req.body, 'saved')
+  Article.findOneAndUpdate({ "_id": req.params.id }, { "saved": req.body.saved })
+  // Execute the above query
+  .exec(function(err, doc) {
+    // Log any errors
+    if (err) {
+      console.log(err);
+    } else {
+      // Or send the document to the browser
+      res.send(doc);
+    }
+  }); 
+});
+
 // Listen on port 3000
 app.listen(3000, function() {
   console.log("App running on port 3000!");
 });
+
+
