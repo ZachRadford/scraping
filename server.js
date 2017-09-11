@@ -182,6 +182,14 @@ app.post("/articles/save/:id", function(req, res) {
   }); 
 });
 
+
+
+// This will get the articles we scraped from the mongoDB
+app.get("/", function(req, res) {
+
+      res.render("index.html");
+});
+
 // Listen on port 3000
 app.listen(3000, function() {
   console.log("App running on port 3000!");
